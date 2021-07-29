@@ -34,11 +34,10 @@ library(extrafont)
 ```{r Directory2, include=FALSE}
 grue_dyn <- read.csv("../data/Simulated_data.csv", header = TRUE) #Database
 
-#load("hab_dyn2.Rdata") 
-#load("MHo_p_MAt.sMAt2_MHo_p4_gof.Rdata")
-#load("m1_4_gof.Rdata")
-load("../data/MHo_p_MAt.sMAt2_MHo_p.Rdata")
-load("../data/Mod_long.Rdata")
+# If you don't want to run everything, You can load this data: 
+
+load("../data/MHo_p_MAt.sMAt2_MHo_p.Rdata") # To make the run faster
+#load("../data/Mod_long.Rdata")
 
 ```
 
@@ -68,28 +67,25 @@ Standardising covariates:
 
 ```{r Standardisation - Preparation pour unmarked, message=FALSE}
 
-# Standardisation variables SITE
+# Site variables 
 
 SiteCovs_s <- SiteCovs %>% mutate_each_(funs(scale(.) %>% as.vector), vars=c( "MHo_p","MU_p", "mm", "temp", "LONG", "MAi_s", "MAt_s"))
 
-SiteCovs_s$MAt_2 <- SiteCovs_s$MAt_s^2 # Creation variable quadratique
-SiteCovs_s$MAi_2 <- SiteCovs_s$MAi_s^2 # Creation variable quadratique
+SiteCovs_s$MAt_2 <- SiteCovs_s$MAt_s^2 
+SiteCovs_s$MAi_2 <- SiteCovs_s$MAi_s^2 
 
-# Standardisation variables qui changent annuelles: 
+# Yearly changing variables (habitat + observational variables )
 MAi <- as.matrix(YearCovs_MAi)
 MAi.mean <- mean(MAi, na.rm = TRUE) 
 MAi.sd <- sd(MAi, na.rm = TRUE)
 MAi.s <- (MAi-MAi.mean)/MAi.sd
-MAi2 <- MAi.s^2 # Creation variable quadratique
+MAi2 <- MAi.s^2 
 
 MAt <- as.matrix(YearCovs_MAt)
 MAt.mean <- mean(MAt, na.rm = TRUE) 
 MAt.sd <- sd(MAt, na.rm = TRUE)
 MAt.s <- (MAt-MAt.mean)/MAt.sd
-MAt2 <- MAt.s^2 # Creation variable quadratique
-
-
-# eff - min echantillonage
+MAt2 <- MAt.s^2 
 
 Eff <- as.matrix(Eff)
 Eff.mean <- mean(Eff, na.rm = TRUE) 
@@ -98,15 +94,11 @@ Eff.std <- (Eff-Eff.mean)/Eff.sd
 Eff2 <- Eff.std^2
 
 
-# JJ 
-
 JJ <- as.matrix(JJ)
 JJ.mean <- mean(JJ, na.rm = TRUE) 
 JJ.sd <- sd(JJ, na.rm = TRUE)
 JJ.std <- (JJ-JJ.mean)/JJ.sd
 JJ2 <- JJ.std^2
-
-# year
 
 year <- as.matrix(year)
 year.mean <- mean(year, na.rm = TRUE) 
@@ -120,7 +112,7 @@ year.std <- (year-year.mean)/year.sd
 We convert this data into an unmarked object so we can start fitting occupancy models.
 
 ```{r Formatage des donnees pour unmarked, echo=FALSE}
-## Fonction
+## Function
 grue.data <- unmarkedMultFrame(y = det, 
                                 siteCovs = SiteCovs_s,
                                 obsCovs = 
@@ -241,7 +233,7 @@ m3 <- colext(psiformula = ~ 1, ~ 1, ~ 1, ~ JJ + Met -1, data = grue.data)
 
 # AICc selection
 
-```{r Selection AIC, eval=FALSE, include=FALSE}
+```{r Selection AIC, echo=FALSE}
 
 # Selection AICcmodavg
 
@@ -260,23 +252,21 @@ lapply(Candidates, checkConv)
 ```
 
 
-Test GOF (Runing this take several hours)
-```{r test ajustement 1, eval=FALSE, include=FALSE}
+Test GOF (Runing this take several hours) - You have to activated to run using eval = TRUE, include = TRUE
+```{r, eval=FALSE, include=FALSE}
 #Test de MacKenzie et Bailey for checking model adjustment
-#gof <- mb.gof.test(MHo_p_MAt.sMAt2_MHo_p, nsim = 1000, plot.hist = TRUE)
-#save(gof, file = "MHo_p_MAt.sMAt2_MHo_p_dyn_gof.Rdata")
-#gof2 <- mb.gof.test(m1, nsim = 1000, plot.hist = TRUE) 
-#save(gof2, file = "m1_dyn_gof.Rdata")year.stdyear.std
-#gof <- read_file("m1_dyn_gof.Rdata")
+
+gof <- mb.gof.test(m1, nsim = 1000, plot.hist = TRUE) 
+save(gof, file = "m1_dyn_gof.Rdata")
 
 
-gof <- gof3
 ## C.hat
+
 gof$chisq.table
 gof$c.hat.est
 
 
-#plots
+# Plot
 hist(gof$t.star, 
      main = as.expression(substitute("Bootstrapped "*chi^2*" fit statistic ("*nsim*" samples)",
          list(nsim = gof$nsim))), 
@@ -316,7 +306,7 @@ with(E.det, {
 ```
 Step 2.1:  Expansion models
 
-```{r modeles dynamiques LONG, eval=FALSE, include=FALSE}
+```{r modeles dynamiques LONG, echo=FALSE}
 MOD.LONG <- colext( ~ LONG , ~ LONG , ~ LONG , ~ JJ + Met_eff , grue.data )
 LONGYEAR <- colext( ~ 1 , ~ LONG + year + LONG*year , ~ 1  , ~ JJ + Met_eff , grue.data )
 LONGYEAR2 <- colext( ~ LONG , ~ LONG + year + LONG*year , ~ LONG + year + LONG*year  , ~ JJ + Met_eff , grue.data )
@@ -418,7 +408,7 @@ gridExtra::grid.arrange(grobs = extinction_figures[c(1,9,16)])
 
 Step 2.3: Habitat models 
 
-Running habitat models (This might take 1-2 hours)
+Running habitat models (This might take 1-2 hours)- You have to activated to run using eval = TRUE, include = TRUE
 
 ```{r modeles dynamiques habitat - H1, eval=FALSE, include=FALSE}
 # List of 64 habitat models used in the AICc selection
@@ -506,8 +496,8 @@ names(hab_dyn)<- c("MHo_p_MHo_p_MHo_p","MU_p_MHo_p_MHo_p","MAt_sMAt_2_MHo_p_MHo_
 
 ```
 
-Test GOF  (Running this take several hours) 
-```{r , eval=FALSE, include=FALSE}
+Test GOF (Running this take several hours) - You have to activated to run using eval = TRUE, include = TRUE
+```{r eval=FALSE, , eval=FALSE, include=FALSE}
 #Test de MacKenzie et Bailey for checking model adjustment
 #gof <- mb.gof.test(MHo_p_MAt.sMAt2_MHo_p, nsim = 1000, plot.hist = TRUE)
 #save(gof, file = "MHo_p_MAt.sMAt2_MHo_p_dyn_gof.Rdata")
@@ -535,7 +525,7 @@ abline(v = gof$chi.square, lty = "dashed", col = "red")
 
 ```
 
-AIC selection for habitat models
+AIC selection for habitat models (you need to run the models before)
 
 ```{r selection modeles, eval=FALSE, include=FALSE}
 
@@ -668,15 +658,6 @@ Plot_psi_openwetlands
 Plot_extinction_openwetlands
 Plot_col_agricultural
 
-
-```
-
-```{r}
-#Save plots
-
-jpeg("out/Plot_psi_openwetlands.jpg", width = 350, height = "350")
-Plot_psi_openwetlands
-dev.off()
 
 ```
 
