@@ -6,5 +6,5 @@ The eastern population has been growing rapidly since the 1980s and is thought t
 
 # Important
 
-The raw data used for this article can not be shared. Instead we offer a simulated data-set to run the code. The results will be differents from our study but the steps were there. 
+The raw data used for this article can not be shared. Instead we offer a simulated data-set to run the code. The results will be differents from our study but the steps are there. 
 
